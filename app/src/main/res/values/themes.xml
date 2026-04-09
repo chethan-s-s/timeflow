@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.CountdownTImer" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:datePickerDialogTheme">@style/CustomDatePickerDialog</item>
+        <item name="android:timePickerDialogTheme">@style/CustomTimePickerDialog</item>
+    </style>
+
+    <style name="CustomDatePickerDialog" parent="Theme.Material3.Light.Dialog">
+        <item name="android:colorAccent">#5A6576</item>
+        <item name="android:windowBackground">#F6F7F9</item>
+        <item name="android:headerBackground">#E6EAF0</item>
+        <item name="android:textColorPrimary">#1F2329</item>
+        <item name="android:textColorSecondary">#616A76</item>
+        <item name="colorAccent">#5A6576</item>
+        <item name="colorPrimary">#D8DEE8</item>
+    </style>
+
+    <style name="CustomTimePickerDialog" parent="Theme.Material3.Light.Dialog">
+        <item name="android:colorAccent">#5A6576</item>
+        <item name="android:windowBackground">#F6F7F9</item>
+        <item name="android:textColorPrimary">#1F2329</item>
+        <item name="android:textColorSecondary">#616A76</item>
+        <item name="colorAccent">#5A6576</item>
+        <item name="colorPrimary">#D8DEE8</item>
+    </style>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/timeflow_app_icon</item>
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <item name="postSplashScreenTheme">@style/Theme.CountdownTImer</item>
+    </style>
+</resources>

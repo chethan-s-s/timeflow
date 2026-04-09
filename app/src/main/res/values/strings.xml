@@ -1,0 +1,145 @@
+<resources>
+    <string name="app_name">Time Flow</string>
+    <string name="appwidget_text">10 Days 10 Hours 10 Minutes</string>
+    <string name="add_widget">Add widget</string>
+    <string name="app_widget_description">Display a live countdown for any event right on your home screen. Tap to open Time Flow.</string>
+
+    <!-- Legal — marked non-translatable so lint doesn't require ES copies -->
+    <string name="privacy_policy_content" translatable="false">
+        Privacy Policy – Time Flow\n\nLast updated: April 9, 2026\n\n
+        Time Flow ("the App") is developed by Chethan S ("Developer").\n\n
+        1. Data We Collect\n
+        Time Flow stores all your countdown data locally on your device using a Room (SQLite) database. We do not collect, transmit, or share any personal data with third parties.\n\n
+        2. Notifications\n
+        The App requests the POST_NOTIFICATIONS permission solely to notify you when a countdown you created has finished. No notification data leaves your device.\n\n
+        3. Alarms\n
+        The App uses SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM to fire notifications precisely at your chosen countdown time. This data is processed entirely on-device.\n\n
+        4. Images\n
+        Photos you add to countdowns are stored in the App\'s private internal storage and are never uploaded or shared.\n\n
+        5. Analytics / Advertising\n
+        The App contains no analytics SDKs, advertising SDKs, or tracking of any kind.\n\n
+        6. Children\n
+        The App does not knowingly collect data from children under 13.\n\n
+        7. Contact\n
+        Questions? Email: support@timeflow.app
+    </string>
+    <string name="terms_of_service_content" translatable="false">
+        Terms of Service – Time Flow\n\nLast updated: April 9, 2026\n\n
+        By using Time Flow you agree to the following terms:\n\n
+        1. Use\n
+        You may use the App for personal, non-commercial purposes. Do not reverse-engineer, decompile, or redistribute the App.\n\n
+        2. No Warranty\n
+        The App is provided "as is" without warranty of any kind. The Developer is not responsible for missed events caused by device restrictions on alarms or notifications.\n\n
+        3. Changes\n
+        These terms may be updated at any time. Continued use of the App constitutes acceptance of any updated terms.\n\n
+        4. Contact\n
+        support@timeflow.app
+    </string>
+    <string name="about_developer_content" translatable="false">
+        Time Flow is built by Chethan S – a solo developer passionate about clean, minimal apps.\n\n
+        Version 1.0\n
+        Contact: support@timeflow.app\n\n
+        Thank you for using Time Flow! ❤️
+    </string>
+
+    <string name="tab_active">Active</string>
+    <string name="tab_finished">Finished</string>
+    <string name="add_new_timer">Add new timer</string>
+    <string name="search_by_title_or_category">Search by title or category</string>
+    <string name="menu">Menu</string>
+    <string name="sort_options">Sort options</string>
+    <string name="delete_selected">Delete selected</string>
+    <string name="archive_selected">Archive selected</string>
+    <string name="set_category_for_selected">Set category for selected</string>
+    <string name="no_active_countdowns">No active countdowns</string>
+    <string name="no_finished_countdowns">No finished countdowns</string>
+    <string name="create_your_first_countdown">Create your first countdown</string>
+    <string name="delete_countdown_title">Delete countdown?</string>
+    <string name="delete_countdown_message">Delete "%1$s" permanently? This action cannot be undone.</string>
+    <string name="delete">Delete</string>
+    <string name="cancel">Cancel</string>
+    <string name="countdown_finished">Countdown Finished</string>
+    <string name="widget_no_countdown_set">No countdown widget set</string>
+    <string name="widget_add_manually">Countdown set! Add the widget to your homescreen from the launcher\'s widget picker.</string>
+    <string name="set_as_widget">Set %1$s as widget</string>
+    <string name="delete_countdown">Delete %1$s</string>
+    <string name="selected_count">%1$d selected</string>
+    <string name="widget_title_placeholder">Title</string>
+    <string name="widget_time_placeholder">00:00</string>
+    <string name="theme">Theme</string>
+    <string name="preferences">Preferences</string>
+    <string name="larger_text">Larger Text</string>
+    <string name="high_contrast">High Contrast</string>
+    <string name="widget_background">Widget background</string>
+    <string name="widget_bg_transparent">Transparent</string>
+    <string name="widget_bg_color">Use countdown color</string>
+    <string name="widget_bg_image_or_color">Use image (or color fallback)</string>
+    <string name="data_backup">Data backup</string>
+    <string name="include_images_in_backup">Include images in backup</string>
+    <string name="replace_data_on_import">Replace existing data when importing</string>
+    <string name="export_backup">Export backup</string>
+    <string name="import_backup">Import backup</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="terms_of_service">Terms of Service</string>
+    <string name="about_developer">About Developer</string>
+    <string name="add_countdown">Add Countdown</string>
+    <string name="edit_countdown">Edit Countdown</string>
+    <string name="event_title">Event title</string>
+    <string name="add_image">Add image</string>
+    <string name="remove_image">Remove image</string>
+    <string name="or_choose_color">Or choose a color</string>
+    <string name="repeat_every_year">Repeat every year</string>
+    <string name="create">Create</string>
+    <string name="save">Save</string>
+    <string name="save_changes">Save changes</string>
+    <string name="close">Close</string>
+    <string name="edit">Edit</string>
+    <string name="active">Active</string>
+    <string name="set_widget">Set Widget</string>
+    <string name="set_active">Set Active</string>
+    <string name="current_widget">Current Widget</string>
+    <string name="ends_on">Ends on %1$s</string>
+    <string name="oldest_first">Oldest first</string>
+    <string name="newest_first">Newest first</string>
+    <string name="nearest_date_first">Nearest date first</string>
+    <string name="farthest_date_first">Farthest date first</string>
+    <string name="select_future_time">Please select a future time</string>
+    <string name="countdown_notifications_channel">Countdown Notifications</string>
+    <string name="timer_finished">Timer Finished!</string>
+    <string name="countdown_ended_message">The countdown \"%1$s\" has ended.</string>
+    <string name="countdown_week_reminder_title_generic" translatable="false">1 week left</string>
+    <string name="countdown_week_reminder_title_category" translatable="false">%1$s · 1 week left</string>
+    <string name="countdown_week_reminder_message_generic" translatable="false">\"%1$s\" ends in 1 week.</string>
+    <string name="countdown_week_reminder_message_category" translatable="false">Your %1$s countdown \"%2$s\" ends in 1 week.</string>
+    <string name="countdown_day_reminder_title_generic" translatable="false">1 day left</string>
+    <string name="countdown_day_reminder_title_category" translatable="false">%1$s · 1 day left</string>
+    <string name="countdown_day_reminder_message_generic" translatable="false">\"%1$s\" ends tomorrow.</string>
+    <string name="countdown_day_reminder_message_category" translatable="false">Your %1$s countdown \"%2$s\" ends tomorrow.</string>
+    <string name="countdown_finished_title_generic" translatable="false">Countdown Finished!</string>
+    <string name="countdown_finished_title_category" translatable="false">%1$s countdown finished!</string>
+    <string name="countdown_finished_message_generic" translatable="false">\"%1$s\" has ended.</string>
+    <string name="countdown_finished_message_category" translatable="false">Your %1$s countdown \"%2$s\" has ended.</string>
+    <string name="backup_import_success">Backup imported</string>
+    <string name="backup_import_failed">Backup import failed</string>
+    <string name="widget_setup_title">Configure Widget</string>
+    <string name="widget_pick_countdown">Select countdown</string>
+    <string name="widget_text_size">Widget text size</string>
+    <string name="widget_text_size_default">Default</string>
+
+    <plurals name="countdown_days_unit">
+        <item quantity="one">Day</item>
+        <item quantity="other">Days</item>
+    </plurals>
+    <plurals name="countdown_hours_unit">
+        <item quantity="one">Hour</item>
+        <item quantity="other">Hours</item>
+    </plurals>
+    <plurals name="countdown_minutes_unit">
+        <item quantity="one">Min</item>
+        <item quantity="other">Mins</item>
+    </plurals>
+    <plurals name="countdown_seconds_unit">
+        <item quantity="one">Sec</item>
+        <item quantity="other">Secs</item>
+    </plurals>
+</resources>

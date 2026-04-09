@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="CustomDatePickerDialog" parent="Theme.Material3.Dark.Dialog">
+        <item name="android:colorAccent">#8A93A3</item>
+        <item name="android:windowBackground">#252A32</item>
+        <item name="android:headerBackground">#2F353F</item>
+        <item name="android:textColorPrimary">#F2F3F5</item>
+        <item name="android:textColorSecondary">#B9BDC5</item>
+        <item name="colorAccent">#8A93A3</item>
+        <item name="colorPrimary">#3A404A</item>
+    </style>
+
+    <style name="CustomTimePickerDialog" parent="Theme.Material3.Dark.Dialog">
+        <item name="android:colorAccent">#8A93A3</item>
+        <item name="android:windowBackground">#252A32</item>
+        <item name="android:textColorPrimary">#F2F3F5</item>
+        <item name="android:textColorSecondary">#B9BDC5</item>
+        <item name="colorAccent">#8A93A3</item>
+        <item name="colorPrimary">#3A404A</item>
+    </style>
+</resources>
+
