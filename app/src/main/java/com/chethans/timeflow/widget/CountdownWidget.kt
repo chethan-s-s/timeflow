@@ -31,11 +31,11 @@ open class CountdownWidget : AppWidgetProvider() {
     protected open val defaultLayoutMode: WidgetLayoutMode = WidgetLayoutMode.ONE_BY_FIVE
 
     companion object {
-        const val ACTION_UPDATE_WIDGET = "com.example.countdowntimer.ACTION_UPDATE_WIDGET"
+        const val ACTION_UPDATE_WIDGET = "com.chethans.timeflow.ACTION_UPDATE_WIDGET"
 
         private val providerClassNames = listOf(
-            "com.example.countdowntimer.widget.CountdownWidget",
-            "com.example.countdowntimer.widget.CountdownWidgetCompact"
+            CountdownWidget::class.java.name,
+            CountdownWidgetCompact::class.java.name
         )
 
         fun updateAllWidgets(context: Context) {
