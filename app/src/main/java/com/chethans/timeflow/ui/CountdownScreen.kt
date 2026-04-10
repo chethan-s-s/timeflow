@@ -81,7 +81,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -90,7 +89,6 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import com.chethans.timeflow.R
 import com.chethans.timeflow.data.CountdownEntity
 import com.chethans.timeflow.ui.components.AddTimerDialog
@@ -116,7 +114,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
-    val haptic = LocalHapticFeedback.current
     val widgetAddManuallyText = stringResource(R.string.widget_add_manually)
     val list by vm.countdowns.observeAsState(emptyList())
     val activeWidgetId by vm.activeWidgetId.collectAsState()
@@ -209,7 +206,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
 
     fun confirmDelete() {
         val itemToDelete = pendingDeleteItem ?: return
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         deleteImageFromInternalStorage(itemToDelete.imageUri)
         vm.delete(itemToDelete)
         if (pendingDeleteFromDetails) {
@@ -353,7 +349,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                             activeOverlayAlpha = activeTabOverlayAlpha,
                             onClick = {
                                 selectedTab = "Active"
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
                             gradient = backgroundGradient,
                             modifier = Modifier.weight(1f)
@@ -365,7 +360,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                             activeOverlayAlpha = activeTabOverlayAlpha,
                             onClick = {
                                 selectedTab = "Finished"
-                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             },
                             gradient = backgroundGradient,
                             modifier = Modifier.weight(1f)
@@ -422,7 +416,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                     actions = {
                         if (selectionMode) {
                             IconButton(onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 val selectedItems = filteredItems.filter { it.id in selectedIds }
                                 selectedItems.forEach { deleteImageFromInternalStorage(it.imageUri) }
                                 vm.bulkDelete(selectedIds.toList())
@@ -431,7 +424,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                 Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_selected))
                             }
                             IconButton(onClick = {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                 vm.bulkArchive(selectedIds.toList(), true)
                                 clearSelection()
                             }) {
@@ -497,12 +489,10 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                 when {
                                     selectedTab == "Active" && horizontalDragAccum < -swipeThresholdPx -> {
                                         selectedTab = "Finished"
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     }
 
                                     selectedTab == "Finished" && horizontalDragAccum > swipeThresholdPx -> {
                                         selectedTab = "Active"
-                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     }
                                 }
                                 horizontalDragAccum = 0f
@@ -605,7 +595,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                     onLongClick = {
                                         if (item.id !in selectedIds) {
                                             selectedIds.add(item.id)
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                         }
                                     },
                                     isSelected = item.id in selectedIds,
@@ -770,7 +759,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                 repeatYearly = false
             },
             onConfirm = {
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 vm.add(
                     title,
                     selectedDateTime,
@@ -842,7 +830,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                     colorIndex = selectedColorIndex ?: safeEditingItem.colorIndex,
                     repeatYearly = repeatYearly
                 )
-                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                 vm.update(updatedItem)
                 title = ""
                 imageUri = ""
