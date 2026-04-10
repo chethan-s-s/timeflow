@@ -106,7 +106,6 @@ import com.chethans.timeflow.ui.theme.ThemePreset
 import com.chethans.timeflow.util.copyImageToInternalStorage
 import com.chethans.timeflow.util.deleteImageFromInternalStorage
 import com.chethans.timeflow.vm.CountdownViewModel
-import com.chethans.timeflow.widget.WidgetLayoutMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -135,7 +134,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
     var selectedCountdown by remember { mutableStateOf<CountdownEntity?>(null) }
     var pendingDeleteItem by remember { mutableStateOf<CountdownEntity?>(null) }
     var pendingDeleteFromDetails by remember { mutableStateOf(false) }
-    var pendingWidgetItem by remember { mutableStateOf<CountdownEntity?>(null) }
     var editingCountdown by remember { mutableStateOf<CountdownEntity?>(null) }
     var countdownBeforeEdit by remember { mutableStateOf<CountdownEntity?>(null) }
     var title by remember { mutableStateOf("") }
@@ -590,11 +588,11 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                         requestDelete(item, fromDetails = false)
                                     },
                                     onSetWidget = {
-                                        vm.syncWidgetPresence()
-                                        if (vm.hasAnyWidgetInstance()) {
-                                            vm.setActiveWidget(item.id)
-                                        } else {
-                                            pendingWidgetItem = item
+                                        vm.setActiveWidget(item.id)
+                                        if (!vm.hasAnyWidgetInstance()) {
+                                            if (!vm.requestPinWidgetIfNeeded()) {
+                                                Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                                            }
                                         }
                                     },
                                     onClick = {
@@ -693,11 +691,11 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                 requestDelete(item, fromDetails = true)
             },
             onSetWidget = {
-                vm.syncWidgetPresence()
-                if (vm.hasAnyWidgetInstance()) {
-                    vm.setActiveWidget(item.id)
-                } else {
-                    pendingWidgetItem = item
+                vm.setActiveWidget(item.id)
+                if (!vm.hasAnyWidgetInstance()) {
+                    if (!vm.requestPinWidgetIfNeeded()) {
+                        Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                    }
                 }
             },
             onEdit = {
@@ -882,46 +880,4 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
             }
         )
     }
-
-    pendingWidgetItem?.let { item ->
-        AlertDialog(
-            onDismissRequest = { pendingWidgetItem = null },
-            containerColor = if (isDark) Color(0xFF2F353F) else Color(0xFFF6F7F9),
-            titleContentColor = if (isDark) Color(0xFFF2F3F5) else Color(0xFF1F2329),
-            textContentColor = if (isDark) Color(0xFFB9BDC5) else Color(0xFF616A76),
-            title = { Text(stringResource(R.string.add_widget)) },
-            text = { Text(stringResource(R.string.widget_layout_mode)) },
-            confirmButton = {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = {
-                        vm.setActiveWidget(item.id)
-                        if (!vm.requestPinWidget(WidgetLayoutMode.ONE_BY_FIVE)) {
-                            Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
-                        }
-                        pendingWidgetItem = null
-                    }) {
-                        Text(stringResource(R.string.widget_layout_wide))
-                    }
-                    TextButton(onClick = {
-                        vm.setActiveWidget(item.id)
-                        if (!vm.requestPinWidget(WidgetLayoutMode.TWO_BY_TWO)) {
-                            Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
-                        }
-                        pendingWidgetItem = null
-                    }) {
-                        Text(stringResource(R.string.widget_layout_compact))
-                    }
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { pendingWidgetItem = null }) {
-                    Text(
-                        stringResource(R.string.cancel),
-                        color = if (isDark) Color(0xFFB9BDC5) else Color(0xFF616A76)
-                    )
-                }
-            }
-        )
-    }
-
 }

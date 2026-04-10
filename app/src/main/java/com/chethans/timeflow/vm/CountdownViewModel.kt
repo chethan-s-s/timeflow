@@ -212,7 +212,17 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         if (!manager.isRequestPinAppWidgetSupported) return false
 
-        return manager.requestPinAppWidget(component, null, null)
+        val callbackIntent = Intent(app, CountdownWidget::class.java).apply {
+            action = CountdownWidget.ACTION_UPDATE_WIDGET
+        }
+        val callback = PendingIntent.getBroadcast(
+            app,
+            component.hashCode(),
+            callbackIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return manager.requestPinAppWidget(component, null, callback)
     }
 
     fun requestPinWidget(layoutMode: WidgetLayoutMode): Boolean {
