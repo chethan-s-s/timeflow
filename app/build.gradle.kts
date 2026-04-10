@@ -13,7 +13,7 @@ val keystoreProperties = Properties().apply {
 }
 
 android {
-    namespace = "com.example.countdowntimer"
+    namespace = "com.chethans.timeflow"
     compileSdk = 36
 
     defaultConfig {

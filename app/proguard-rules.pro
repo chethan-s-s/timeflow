@@ -50,9 +50,9 @@
 # ──────────────────────────────────────────────
 # App-specific: keep data/widget/receiver classes
 # ──────────────────────────────────────────────
--keep class com.example.countdowntimer.data.** { *; }
--keep class com.example.countdowntimer.widget.** { *; }
--keep class com.example.countdowntimer.receiver.** { *; }
+-keep class com.example.timeflow.data.** { *; }
+-keep class com.example.timeflow.widget.** { *; }
+-keep class com.example.timeflow.receiver.** { *; }
 
 # ──────────────────────────────────────────────
 # Java Serialization (backup/restore)
