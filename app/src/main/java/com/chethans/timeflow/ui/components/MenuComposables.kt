@@ -44,8 +44,6 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.MutableState
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
 import com.chethans.timeflow.data.CountdownEntity
 import com.chethans.timeflow.R
 import com.chethans.timeflow.ui.theme.ThemePreset
@@ -551,13 +549,11 @@ fun SelectionModeActions(
     showCategoryMenu: MutableState<Boolean>,
     onClearSelection: () -> Unit
 ) {
-    val haptic = LocalHapticFeedback.current
     val deleteSelected = stringResource(R.string.delete_selected)
     val archiveSelected = stringResource(R.string.archive_selected)
     val setCategory = stringResource(R.string.set_category_for_selected)
 
     IconButton(onClick = {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         val selectedItems = filteredItems.filter { it.id in selectedIds }
         selectedItems.forEach { deleteImageFromInternalStorage(it.imageUri) }
         vm.bulkDelete(selectedIds.toList())
@@ -567,7 +563,6 @@ fun SelectionModeActions(
     }
 
     IconButton(onClick = {
-        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
         vm.bulkArchive(selectedIds.toList(), true)
         onClearSelection()
     }) {
@@ -578,6 +573,3 @@ fun SelectionModeActions(
         Icon(Icons.Default.Category, contentDescription = setCategory)
     }
 }
-
-
-
