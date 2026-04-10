@@ -2,15 +2,29 @@ package com.example.countdowntimer.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Widgets
-import androidx.compose.material3.*
-import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +33,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -43,32 +58,36 @@ fun CountdownCard(
     onLongClick: () -> Unit = {},
     isSelected: Boolean = false,
     textScale: Float = 1f,
-    highContrast: Boolean = false
+    highContrast: Boolean = false,
+    isGridMode: Boolean = false
 ) {
     val remaining = item.targetTime - currentTime
-    val endDateStr = remember(item.targetTime) {
-        formatLocalizedDateTime(item.targetTime)
-    }
-
-    val selectedGradient = remember(item.colorIndex) {
-        getCountdownGradient(item.colorIndex)
+    val endDateStr = remember(item.targetTime) { formatLocalizedDateTime(item.targetTime) }
+    val selectedGradient = remember(item.colorIndex) { getCountdownGradient(item.colorIndex) }
+    val countdownParts = remember(remaining) { extractCountdownParts(remaining) }
+    val progress = remember(item.createdAt, item.targetTime, currentTime) {
+        calculateCountdownProgress(item.createdAt, item.targetTime, currentTime)
     }
 
     Card(
         onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 16.dp)
-            .pointerInput(item.id) {
-                detectTapGestures(onLongPress = { onLongClick() })
-            }
+            .padding(
+                vertical = 8.dp,
+                horizontal = if (isGridMode) 6.dp else 16.dp
+            )
+            .pointerInput(item.id) { detectTapGestures(onLongPress = { onLongClick() }) }
             .shadow(
                 elevation = 16.dp,
                 shape = RoundedCornerShape(24.dp),
                 ambientColor = Color.Black.copy(alpha = 0.3f),
                 spotColor = Color.Black.copy(alpha = 0.4f)
             )
-            .height((180.dp * textScale).coerceAtLeast(180.dp)),
+            .height(
+                if (isGridMode) (240.dp * textScale).coerceAtLeast(220.dp)
+                else (180.dp * textScale).coerceAtLeast(180.dp)
+            ),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
@@ -78,14 +97,14 @@ fun CountdownCard(
                 AsyncImage(
                     model = item.imageUri,
                     contentDescription = null,
-                    modifier = Modifier.matchParentSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             } else {
                 // Gradient background if no image
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
+                        .fillMaxSize()
                         .background(Brush.verticalGradient(selectedGradient))
                 )
             }
@@ -93,68 +112,63 @@ fun CountdownCard(
             // Dark overlay for better text readability
             Box(
                 modifier = Modifier
-                    .matchParentSize()
-                    .background(Color.Black.copy(alpha = if (highContrast) 0.52f else 0.38f))
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = if (highContrast) 0.58f else 0.44f))
             )
 
             if (isSelected) {
                 Box(
                     modifier = Modifier
-                        .matchParentSize()
+                        .fillMaxSize()
                         .background(Color.White.copy(alpha = 0.16f))
                 )
             }
 
-            // Content
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                horizontalAlignment = Alignment.Start
+                    .padding(if (isGridMode) 12.dp else 16.dp),
+                verticalArrangement = if (isGridMode) Arrangement.SpaceBetween else Arrangement.spacedBy(6.dp)
             ) {
                 // Row 1: Title & Actions
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Top
                 ) {
                     Row(
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(2.dp)
-                        ) {
-                            Icon(
-                                imageVector = categoryIconFor(item.category),
-                                contentDescription = item.category,
-                                tint = Color.White.copy(alpha = 0.96f),
-                                modifier = Modifier.size((24f * textScale).dp)
-                            )
+                        Icon(
+                            imageVector = categoryIconFor(item.category),
+                            contentDescription = item.category,
+                            tint = Color.White,
+                            modifier = Modifier.size(if (isGridMode) 18.dp else 24.dp)
+                        )
+                        Column(modifier = Modifier.weight(1f)) {
                             Text(
                                 text = item.category,
-                                style = MaterialTheme.typography.labelSmall.copy(
-                                    color = Color.White.copy(alpha = 0.95f),
-                                    fontSize = (10f * textScale).sp
+                                color = Color.White.copy(alpha = 0.88f),
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontSize = if (isGridMode) 11.sp else (13f * textScale).sp,
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Text(
+                                text = item.title,
+                                color = Color.White,
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = if (isGridMode) (16f * textScale).sp else (24f * textScale).sp
                                 ),
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
-                        Text(
-                            text = item.title,
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = (28f * textScale).sp
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f)
-                        )
                     }
 
                     Row {
@@ -177,28 +191,87 @@ fun CountdownCard(
                     }
                 }
 
-                // Row 2: Countdown Timer
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(12.dp))
-                        .background(Color.White.copy(alpha = if (highContrast) 0.28f else 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                ) {
-                    FormattedCountdownText(
-                        ms = remaining,
-                        valueFontSize = (28f * textScale).sp,
-                        unitFontSize = (16f * textScale).sp
-                    )
-                }
+                if (isGridMode) {
+                    // Row 2: Countdown Timer (Circular Progress)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val circleSize = 132.dp
+                        Box(contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator(
+                                progress = { progress },
+                                modifier = Modifier.size(circleSize),
+                                color = Color.White,
+                                trackColor = Color.White.copy(alpha = 0.22f),
+                                strokeWidth = 9.dp
+                            )
 
-                // Row 3: End Date
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (remaining <= 0) {
+                                Text(
+                                    text = stringResource(R.string.countdown_finished),
+                                    color = Color.White,
+                                    fontWeight = FontWeight.Bold,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            } else {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    TimeUnitRow(
+                                        leftValue = countdownParts.days,
+                                        leftUnit = "D",
+                                        rightValue = countdownParts.hours,
+                                        rightUnit = "H",
+                                        textScale = textScale,
+                                        isGridMode = true
+                                    )
+                                    TimeUnitRow(
+                                        leftValue = countdownParts.minutes,
+                                        leftUnit = "M",
+                                        rightValue = countdownParts.seconds,
+                                        rightUnit = "S",
+                                        textScale = textScale,
+                                        isGridMode = true
+                                    )
+                                }
+                            }
+                        }
+                    }
                     Text(
                         text = endDateStr,
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            color = Color.White.copy(alpha = 0.9f),
-                            fontSize = (14f * textScale).sp
+                        color = Color.White.copy(alpha = 0.9f),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = (12f * textScale).sp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                } else {
+                    // Old single-card style: full time text in one line and end date below it.
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(Color.White.copy(alpha = if (highContrast) 0.28f else 0.2f))
+                            .padding(horizontal = 12.dp, vertical = 6.dp)
+                    ) {
+                        FormattedCountdownText(
+                            ms = remaining,
+                            valueFontSize = (32f * textScale).sp,
+                            unitFontSize = (18f * textScale).sp
                         )
+                    }
+
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Text(
+                        text = stringResource(R.string.ends_on, endDateStr),
+                        color = Color.White.copy(alpha = 0.9f),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = (12f * textScale).sp),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
             }
@@ -207,10 +280,10 @@ fun CountdownCard(
 }
 
 @Composable
-fun FormattedCountdownText(
+private fun FormattedCountdownText(
     ms: Long,
-    valueFontSize: androidx.compose.ui.unit.TextUnit = 28.sp,
-    unitFontSize: androidx.compose.ui.unit.TextUnit = 16.sp,
+    valueFontSize: androidx.compose.ui.unit.TextUnit,
+    unitFontSize: androidx.compose.ui.unit.TextUnit,
     color: Color = Color.White
 ) {
     if (ms <= 0) {
@@ -235,7 +308,7 @@ fun FormattedCountdownText(
                     append(days.toString())
                 }
                 withStyle(style = SpanStyle(fontSize = unitFontSize)) {
-                    append(" ${pluralStringResource(R.plurals.countdown_days_unit, days.toInt())} ")
+                    append(" ${stringResource(R.string.countdown_unit_day)} ")
                 }
             }
             if (hours > 0 || days > 0) {
@@ -243,27 +316,89 @@ fun FormattedCountdownText(
                     append(hours.toString())
                 }
                 withStyle(style = SpanStyle(fontSize = unitFontSize)) {
-                    append(" ${pluralStringResource(R.plurals.countdown_hours_unit, hours.toInt())} ")
+                    append(" ${stringResource(R.string.countdown_unit_hour)} ")
                 }
             }
             withStyle(style = SpanStyle(fontSize = valueFontSize, fontWeight = FontWeight.Bold)) {
                 append(minutes.toString())
             }
             withStyle(style = SpanStyle(fontSize = unitFontSize)) {
-                append(" ${pluralStringResource(R.plurals.countdown_minutes_unit, minutes.toInt())}")
-            }
-            withStyle(style = SpanStyle(fontSize = unitFontSize)) {
-                append(" ")
+                append(" ${stringResource(R.string.countdown_unit_min)} ")
             }
             withStyle(style = SpanStyle(fontSize = valueFontSize, fontWeight = FontWeight.Bold)) {
                 append(seconds.toString().padStart(2, '0'))
             }
             withStyle(style = SpanStyle(fontSize = unitFontSize)) {
-                append(" ${pluralStringResource(R.plurals.countdown_seconds_unit, seconds.toInt())}")
+                append(" ${stringResource(R.string.countdown_unit_sec)}")
             }
         },
         color = color
     )
+}
+
+@Composable
+private fun TimeUnitRow(
+    leftValue: Long,
+    leftUnit: String,
+    rightValue: Long,
+    rightUnit: String,
+    textScale: Float,
+    isGridMode: Boolean
+) {
+    val valueSize = if (isGridMode) (21f * textScale).sp else (20f * textScale).sp
+    val unitSize = if (isGridMode) (13f * textScale).sp else (12f * textScale).sp
+
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+        UnitValue(value = leftValue, unit = leftUnit, valueSize = valueSize, unitSize = unitSize)
+        UnitValue(value = rightValue, unit = rightUnit, valueSize = valueSize, unitSize = unitSize)
+    }
+}
+
+@Composable
+private fun UnitValue(value: Long, unit: String, valueSize: androidx.compose.ui.unit.TextUnit, unitSize: androidx.compose.ui.unit.TextUnit) {
+    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+        Text(
+            text = value.toString().padStart(2, '0'),
+            color = Color.White,
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = valueSize
+        )
+        Text(
+            text = unit,
+            color = Color.White.copy(alpha = 0.9f),
+            fontWeight = FontWeight.Medium,
+            fontSize = unitSize
+        )
+    }
+}
+
+private data class CountdownParts(
+    val days: Long,
+    val hours: Long,
+    val minutes: Long,
+    val seconds: Long
+)
+
+private fun extractCountdownParts(ms: Long): CountdownParts {
+    if (ms <= 0) return CountdownParts(0, 0, 0, 0)
+
+    val totalSeconds = ms / 1000
+    val totalMinutes = totalSeconds / 60
+    val totalHours = totalMinutes / 60
+    val totalDays = totalHours / 24
+
+    return CountdownParts(
+        days = totalDays,
+        hours = totalHours % 24,
+        minutes = totalMinutes % 60,
+        seconds = totalSeconds % 60
+    )
+}
+
+private fun calculateCountdownProgress(createdAt: Long, targetTime: Long, now: Long): Float {
+    val duration = (targetTime - createdAt).coerceAtLeast(1L)
+    val elapsed = (now - createdAt).coerceIn(0L, duration)
+    return (elapsed.toFloat() / duration.toFloat()).coerceIn(0f, 1f)
 }
 
 private val countdownGradients = listOf(

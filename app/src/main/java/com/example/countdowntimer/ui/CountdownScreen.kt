@@ -14,6 +14,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +26,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -71,8 +75,10 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,6 +94,7 @@ import com.example.countdowntimer.data.CountdownEntity
 import com.example.countdowntimer.ui.components.AddTimerDialog
 import com.example.countdowntimer.ui.components.CategoryOptions
 import com.example.countdowntimer.ui.components.CountdownDetailsDialog
+import com.example.countdowntimer.ui.components.CardLayoutMode
 import com.example.countdowntimer.ui.components.EditTimerDialog
 import com.example.countdowntimer.ui.components.HamburgerMenuContent
 import com.example.countdowntimer.ui.components.SortMenuDropdown
@@ -117,6 +124,8 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
 
     var currentTime by remember { mutableStateOf(System.currentTimeMillis()) }
     var selectedTab by remember { mutableStateOf("Active") }
+    val swipeThresholdPx = with(LocalDensity.current) { 72.dp.toPx() }
+    var horizontalDragAccum by remember { mutableStateOf(0f) }
 
     var showDialog by remember { mutableStateOf(false) }
     var selectedCountdown by remember { mutableStateOf<CountdownEntity?>(null) }
@@ -135,6 +144,9 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
     var sortAscending by remember { mutableStateOf(prefs.getBoolean("sort_ascending", true)) }
     var largeText by remember { mutableStateOf(prefs.getBoolean("large_text", false)) }
     var highContrast by remember { mutableStateOf(prefs.getBoolean("high_contrast", false)) }
+    var cardLayoutMode by remember {
+        mutableStateOf(CardLayoutMode.fromStorage(prefs.getString("card_layout_mode", CardLayoutMode.SINGLE_COLUMN.name)))
+    }
     var includeImagesInBackup by remember { mutableStateOf(prefs.getBoolean("backup_include_images", false)) }
     var replaceDataOnImport by remember { mutableStateOf(prefs.getBoolean("backup_replace_on_import", true)) }
     var themePreset by remember {
@@ -213,6 +225,7 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 currentTime = System.currentTimeMillis()
+                vm.syncWidgetPresence()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -471,6 +484,29 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
+                    .pointerInput(selectedTab) {
+                        detectHorizontalDragGestures(
+                            onDragStart = { horizontalDragAccum = 0f },
+                            onHorizontalDrag = { _, dragAmount ->
+                                horizontalDragAccum += dragAmount
+                            },
+                            onDragEnd = {
+                                when {
+                                    selectedTab == "Active" && horizontalDragAccum < -swipeThresholdPx -> {
+                                        selectedTab = "Finished"
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+
+                                    selectedTab == "Finished" && horizontalDragAccum > swipeThresholdPx -> {
+                                        selectedTab = "Active"
+                                        haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                    }
+                                }
+                                horizontalDragAccum = 0f
+                            },
+                            onDragCancel = { horizontalDragAccum = 0f }
+                        )
+                    }
             ) {
                 AnimatedContent(
                     targetState = selectedTab,
@@ -530,49 +566,67 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                             }
                         }
                     } else {
+                        val cardContent: @Composable (CountdownEntity) -> Unit = { item ->
+                            AnimatedVisibility(
+                                visible = true,
+                                enter = slideInVertically(animationSpec = tween(260)) { it / 6 } + fadeIn(tween(220)),
+                                exit = fadeOut(tween(140))
+                            ) {
+                                CountdownCard(
+                                    item = item,
+                                    activeWidgetId = activeWidgetId,
+                                    currentTime = currentTime,
+                                    onDelete = {
+                                        requestDelete(item, fromDetails = false)
+                                    },
+                                    onSetWidget = {
+                                        vm.setActiveWidget(item.id)
+                                        if (!vm.requestPinWidgetIfNeeded()) {
+                                            Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                                        }
+                                    },
+                                    onClick = {
+                                        if (selectionMode) {
+                                            if (item.id in selectedIds) selectedIds.remove(item.id) else selectedIds.add(item.id)
+                                        } else {
+                                            selectedCountdown = item
+                                        }
+                                    },
+                                    onLongClick = {
+                                        if (item.id !in selectedIds) {
+                                            selectedIds.add(item.id)
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        }
+                                    },
+                                    isSelected = item.id in selectedIds,
+                                    textScale = if (largeText) 1.12f else 1f,
+                                    highContrast = highContrast,
+                                    isGridMode = cardLayoutMode == CardLayoutMode.TWO_COLUMN
+                                )
+                            }
+                        }
+
+                        if (cardLayoutMode == CardLayoutMode.TWO_COLUMN) {
+                            LazyVerticalGrid(
+                                columns = GridCells.Adaptive(minSize = 170.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .weight(1f)
+                            ) {
+                                gridItems(tabItems, key = { it.id }) { item ->
+                                    cardContent(item)
+                                }
+                            }
+                        } else {
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .weight(1f)
                         ) {
                             items(tabItems, key = { it.id }) { item ->
-                                AnimatedVisibility(
-                                    visible = true,
-                                    enter = slideInVertically(animationSpec = tween(260)) { it / 6 } + fadeIn(tween(220)),
-                                    exit = fadeOut(tween(140))
-                                ) {
-                                    CountdownCard(
-                                        item = item,
-                                        activeWidgetId = activeWidgetId,
-                                        currentTime = currentTime,
-                                        onDelete = {
-                                            requestDelete(item, fromDetails = false)
-                                        },
-                                        onSetWidget = {
-                                            vm.setActiveWidget(item.id)
-                                            if (!vm.requestPinWidgetIfNeeded()) {
-                                                Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
-                                            }
-                                        },
-                                        onClick = {
-                                            if (selectionMode) {
-                                                if (item.id in selectedIds) selectedIds.remove(item.id) else selectedIds.add(item.id)
-                                            } else {
-                                                selectedCountdown = item
-                                            }
-                                        },
-                                        onLongClick = {
-                                            if (item.id !in selectedIds) {
-                                                selectedIds.add(item.id)
-                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            }
-                                        },
-                                        isSelected = item.id in selectedIds,
-                                        textScale = if (largeText) 1.12f else 1f,
-                                        highContrast = highContrast
-                                    )
-                                }
+                                cardContent(item)
                             }
+                        }
                         }
                     }
                 }
@@ -586,12 +640,17 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
             themePreset = themePreset,
             largeText = largeText,
             highContrast = highContrast,
+            cardLayoutMode = cardLayoutMode,
             widgetBackgroundMode = widgetBackgroundMode,
             includeImagesInBackup = includeImagesInBackup,
             replaceOnImport = replaceDataOnImport,
             onThemeChange = { themePreset = it },
             onLargeTextChange = { largeText = it },
             onHighContrastChange = { highContrast = it },
+            onCardLayoutModeChange = { mode ->
+                cardLayoutMode = mode
+                prefs.edit().putString("card_layout_mode", mode.name).apply()
+            },
             onWidgetBackgroundModeChange = { mode -> vm.setWidgetBackgroundMode(mode) },
             onIncludeImagesInBackupChange = {
                 includeImagesInBackup = it

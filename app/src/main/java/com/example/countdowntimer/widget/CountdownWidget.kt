@@ -26,10 +26,43 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
-class CountdownWidget : AppWidgetProvider() {
+open class CountdownWidget : AppWidgetProvider() {
+
+    protected open val defaultLayoutMode: WidgetLayoutMode = WidgetLayoutMode.ONE_BY_FIVE
 
     companion object {
-        private const val ACTION_UPDATE_WIDGET = "com.example.countdowntimer.ACTION_UPDATE_WIDGET"
+        const val ACTION_UPDATE_WIDGET = "com.example.countdowntimer.ACTION_UPDATE_WIDGET"
+
+        private val providerClassNames = listOf(
+            "com.example.countdowntimer.widget.CountdownWidget",
+            "com.example.countdowntimer.widget.CountdownWidgetCompact"
+        )
+
+        fun updateAllWidgets(context: Context) {
+            val appContext = context.applicationContext
+            val appWidgetManager = AppWidgetManager.getInstance(appContext)
+            providerClassNames.forEach { className ->
+                val componentName = ComponentName(appContext, className)
+                val ids = appWidgetManager.getAppWidgetIds(componentName)
+                if (ids.isNotEmpty()) {
+                    appContext.sendBroadcast(
+                        Intent(AppWidgetManager.ACTION_APPWIDGET_UPDATE).apply {
+                            setClassName(appContext, className)
+                            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+                        }
+                    )
+                }
+            }
+        }
+
+        fun hasAnyWidgetInstance(context: Context): Boolean {
+            val appContext = context.applicationContext
+            val appWidgetManager = AppWidgetManager.getInstance(appContext)
+            return providerClassNames.any { className ->
+                appWidgetManager.getAppWidgetIds(ComponentName(appContext, className)).isNotEmpty()
+            }
+        }
     }
 
     override fun onUpdate(
@@ -51,14 +84,10 @@ class CountdownWidget : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_UPDATE_WIDGET) {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val componentName = ComponentName(context, CountdownWidget::class.java)
-            val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
-
             val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    updateWidgets(context, appWidgetManager, appWidgetIds)
+                    updateAllWidgets(context)
                     scheduleNextUpdate(context)
                 } finally {
                     pendingResult.finish()
@@ -76,8 +105,20 @@ class CountdownWidget : AppWidgetProvider() {
             editor.remove("widget_text_scale_$id")
             editor.remove("widget_high_contrast_$id")
             editor.remove("widget_background_mode_$id")
+            editor.remove("widget_layout_mode_$id")
+        }
+        if (!hasAnyWidgetInstance(context)) {
+            editor.putInt("active_id", -1)
         }
         editor.apply()
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
+            .edit()
+            .putInt("active_id", -1)
+            .apply()
     }
 
     private suspend fun updateWidgets(
@@ -97,13 +138,21 @@ class CountdownWidget : AppWidgetProvider() {
         }.getOrDefault(WidgetBackgroundMode.TRANSPARENT)
 
         for (id in appWidgetIds) {
-            val views = RemoteViews(context.packageName, R.layout.widget_layout)
             val widgetActiveId = prefs.getInt("active_id_$id", activeId)
             val widgetBackgroundMode = runCatching {
                 WidgetBackgroundMode.valueOf(
                     prefs.getString("widget_background_mode_$id", backgroundMode.name) ?: backgroundMode.name
                 )
             }.getOrDefault(backgroundMode)
+            val widgetLayoutMode = prefs.getString("widget_layout_mode_$id", null)
+                ?.let(WidgetLayoutMode::fromStorage)
+                ?: defaultLayoutMode
+            val layoutRes = if (widgetLayoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+                R.layout.widget_layout_compact
+            } else {
+                R.layout.widget_layout
+            }
+            val views = RemoteViews(context.packageName, layoutRes)
             val widgetTextScale = prefs.getFloat("widget_text_scale_$id", 1f).coerceIn(0.85f, 1.4f)
             val widgetHighContrast = prefs.getBoolean("widget_high_contrast_$id", false)
 
@@ -128,33 +177,70 @@ class CountdownWidget : AppWidgetProvider() {
                 activeCountdown = activeCountdown,
                 mode = widgetBackgroundMode
             )
-            applyWidgetTextStyle(views, widgetTextScale, widgetHighContrast)
+            applyWidgetTextStyle(views, widgetTextScale, widgetHighContrast, widgetLayoutMode)
 
             if (activeCountdown != null) {
                 val remaining = activeCountdown.targetTime - System.currentTimeMillis()
-                val timeText = formatWidgetTime(context, remaining)
-
                 views.setTextViewText(R.id.widget_title, activeCountdown.title)
-                views.setTextViewText(R.id.widget_time, timeText)
+                if (widgetLayoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+                    views.setTextViewText(R.id.widget_time_compact, formatCompactWidgetTime(remaining))
+                    views.setViewVisibility(R.id.widget_progress_percent, View.VISIBLE)
+                    views.setTextViewText(
+                        R.id.widget_progress_percent,
+                        formatWidgetProgressPercent(activeCountdown.createdAt, activeCountdown.targetTime)
+                    )
+                } else {
+                    val timeText = formatWidgetTime(context, remaining)
+                    views.setTextViewText(R.id.widget_time, timeText)
+                }
             } else {
-                views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_no_countdown_set))
-                views.setTextViewText(R.id.widget_time, "")
+                if (widgetLayoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+                    views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_title_placeholder))
+                    views.setTextViewText(R.id.widget_time_compact, context.getString(R.string.widget_time_placeholder_compact))
+                    views.setViewVisibility(R.id.widget_progress_percent, View.GONE)
+                    views.setTextViewText(R.id.widget_progress_percent, "")
+                } else {
+                    views.setTextViewText(R.id.widget_title, context.getString(R.string.widget_title_placeholder))
+                    views.setTextViewText(R.id.widget_time, context.getString(R.string.widget_time_placeholder_wide))
+                }
             }
 
             appWidgetManager.updateAppWidget(id, views)
         }
     }
 
-    private fun applyWidgetTextStyle(views: RemoteViews, textScale: Float, highContrast: Boolean) {
-        views.setFloat(R.id.widget_title, "setTextSize", 18f * textScale)
-        views.setFloat(R.id.widget_time, "setTextSize", 16f * textScale)
+    private fun applyWidgetTextStyle(
+        views: RemoteViews,
+        textScale: Float,
+        highContrast: Boolean,
+        layoutMode: WidgetLayoutMode
+    ) {
+        if (layoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+            views.setFloat(R.id.widget_title, "setTextSize", 14f * textScale)
+            views.setFloat(R.id.widget_time_compact, "setTextSize", 13f * textScale)
+            views.setFloat(R.id.widget_progress_percent, "setTextSize", 11f * textScale)
+        } else {
+            views.setFloat(R.id.widget_title, "setTextSize", 18f * textScale)
+            views.setFloat(R.id.widget_time, "setTextSize", 16f * textScale)
+        }
+
         if (highContrast) {
             views.setTextColor(R.id.widget_title, android.graphics.Color.WHITE)
-            views.setTextColor(R.id.widget_time, android.graphics.Color.WHITE)
+            if (layoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+                views.setTextColor(R.id.widget_time_compact, android.graphics.Color.WHITE)
+                views.setTextColor(R.id.widget_progress_percent, android.graphics.Color.WHITE)
+            } else {
+                views.setTextColor(R.id.widget_time, android.graphics.Color.WHITE)
+            }
             views.setInt(R.id.widget_image_scrim, "setAlpha", 190)
         } else {
             views.setTextColor(R.id.widget_title, android.graphics.Color.parseColor("#FFFFFF"))
-            views.setTextColor(R.id.widget_time, android.graphics.Color.parseColor("#E5E7EB"))
+            if (layoutMode == WidgetLayoutMode.TWO_BY_TWO) {
+                views.setTextColor(R.id.widget_time_compact, android.graphics.Color.parseColor("#FFFFFF"))
+                views.setTextColor(R.id.widget_progress_percent, android.graphics.Color.parseColor("#D1D5DB"))
+            } else {
+                views.setTextColor(R.id.widget_time, android.graphics.Color.parseColor("#E5E7EB"))
+            }
             views.setInt(R.id.widget_image_scrim, "setAlpha", 120)
         }
     }
@@ -329,5 +415,28 @@ class CountdownWidget : AppWidgetProvider() {
         appendStyled(minutes, context.resources.getQuantityString(R.plurals.countdown_minutes_unit, minutes.toInt()))
 
         return ssb
+    }
+
+    private fun formatCompactWidgetTime(ms: Long): String {
+        if (ms <= 0) return "Done"
+
+        val totalSeconds = ms / 1000
+        val totalMinutes = totalSeconds / 60
+        val totalHours = totalMinutes / 60
+        val totalDays = totalHours / 24
+
+        val days = totalDays
+        val hours = totalHours % 24
+        val minutes = totalMinutes % 60
+        val seconds = totalSeconds % 60
+
+        return "${days}d ${hours}h\n${minutes}m ${seconds}s"
+    }
+
+    private fun formatWidgetProgressPercent(createdAt: Long, targetTime: Long): String {
+        val duration = (targetTime - createdAt).coerceAtLeast(1L)
+        val elapsed = (System.currentTimeMillis() - createdAt).coerceIn(0L, duration)
+        val percent = ((elapsed.toDouble() / duration.toDouble()) * 100.0).toInt().coerceIn(0, 100)
+        return "$percent%"
     }
 }

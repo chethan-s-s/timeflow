@@ -2,9 +2,9 @@ package com.example.countdowntimer.ui.components
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -74,6 +74,8 @@ fun EditTimerDialog(
     dialogColors: TimerDialogColors
 ) {
     if (!showDialog) return
+
+    val showManualColorPicker = false
 
     val context = LocalContext.current
     val imagePickerLauncher = rememberLauncherForActivityResult(
@@ -239,23 +241,24 @@ fun EditTimerDialog(
                         }
                     }
 
-                    Text(
-                        text = stringResource(R.string.or_choose_color),
-                        color = dialogColors.mutedContentColor,
-                        style = MaterialTheme.typography.labelMedium.copy(
-                            fontSize = if (largeText) 16.sp else 14.sp
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                        textAlign = TextAlign.Center
-                    )
+                    if (showManualColorPicker) {
+                        Text(
+                            text = stringResource(R.string.or_choose_color),
+                            color = dialogColors.mutedContentColor,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontSize = if (largeText) 16.sp else 14.sp
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
 
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(if (largeText) 10.dp else 8.dp)
-                    ) {
-                        allGradients.forEachIndexed { index, colors ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(if (largeText) 10.dp else 8.dp)
+                        ) {
+                            allGradients.forEachIndexed { index, colors ->
                                 Box(
                                     modifier = Modifier
                                         .size(if (largeText) 40.dp else 30.dp)
@@ -269,6 +272,7 @@ fun EditTimerDialog(
                                         .clickable { onSelectColor(index) }
                                 )
                             }
+                        }
                     }
 
                     Row(

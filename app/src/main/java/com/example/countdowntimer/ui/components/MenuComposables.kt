@@ -49,6 +49,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.example.countdowntimer.data.CountdownEntity
 import com.example.countdowntimer.R
+import com.example.countdowntimer.ui.components.CardLayoutMode
 import com.example.countdowntimer.ui.theme.ThemePreset
 import com.example.countdowntimer.util.deleteImageFromInternalStorage
 import com.example.countdowntimer.vm.CountdownViewModel
@@ -59,6 +60,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 
 @Composable
@@ -68,12 +70,14 @@ fun HamburgerMenuContent(
     themePreset: ThemePreset,
     largeText: Boolean,
     highContrast: Boolean,
+    cardLayoutMode: CardLayoutMode,
     widgetBackgroundMode: WidgetBackgroundMode,
     includeImagesInBackup: Boolean,
     replaceOnImport: Boolean,
     onThemeChange: (ThemePreset) -> Unit,
     onLargeTextChange: (Boolean) -> Unit,
     onHighContrastChange: (Boolean) -> Unit,
+    onCardLayoutModeChange: (CardLayoutMode) -> Unit,
     onWidgetBackgroundModeChange: (WidgetBackgroundMode) -> Unit,
     onIncludeImagesInBackupChange: (Boolean) -> Unit,
     onReplaceOnImportChange: (Boolean) -> Unit,
@@ -82,6 +86,8 @@ fun HamburgerMenuContent(
     prefs: SharedPreferences
 ) {
     val isDark = isSystemInDarkTheme()
+    val configuration = LocalConfiguration.current
+    val drawerWidth = (configuration.screenWidthDp.dp * 0.86f).coerceIn(260.dp, 340.dp)
 
     // Track which legal dialog (if any) is open
     var legalTab by remember { mutableStateOf<LegalTab?>(null) }
@@ -133,7 +139,7 @@ fun HamburgerMenuContent(
     ) {
         Column(
             modifier = Modifier
-                .width(300.dp)
+                .width(drawerWidth)
                 .fillMaxHeight()
                 .background(drawerBackground)
                 .statusBarsPadding()
@@ -304,6 +310,59 @@ fun HamburgerMenuContent(
                 )
             }
 
+            Text(
+                text = stringResource(R.string.card_layout_mode),
+                style = MaterialTheme.typography.labelMedium.copy(
+                    color = if (isDark) Color(0xFF90CAF9) else Color(0xFF1976D2),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = androidx.compose.ui.unit.TextUnit(12f, androidx.compose.ui.unit.TextUnitType.Sp)
+                ),
+                modifier = Modifier.padding(top = 10.dp, bottom = 8.dp)
+            )
+
+            CardLayoutMode.entries.forEach { mode ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onCardLayoutModeChange(mode) }
+                        .padding(vertical = 8.dp)
+                        .background(
+                            color = if (cardLayoutMode == mode)
+                                (if (isDark) Color(0xFF263238).copy(alpha = 0.4f) else Color(0xFFE3F2FD).copy(alpha = 0.5f))
+                            else Color.Transparent,
+                            shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                        )
+                        .padding(horizontal = 12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clip(CircleShape)
+                            .background(
+                                color = if (cardLayoutMode == mode)
+                                    (if (isDark) Color(0xFF90CAF9) else Color(0xFF1976D2))
+                                else Color.Transparent,
+                                shape = CircleShape
+                            )
+                            .border(
+                                width = if (cardLayoutMode == mode) 0.dp else 1.5.dp,
+                                color = if (isDark) Color(0xFF666666) else Color(0xFFCCCCCC),
+                                shape = CircleShape
+                            )
+                    )
+                    Spacer(modifier = Modifier.spaceWidth(12.dp))
+                    Text(
+                        text = when (mode) {
+                            CardLayoutMode.SINGLE_COLUMN -> stringResource(R.string.card_layout_single)
+                            CardLayoutMode.TWO_COLUMN -> stringResource(R.string.card_layout_double)
+                        },
+                        color = textColor,
+                        fontSize = androidx.compose.ui.unit.TextUnit(14f, androidx.compose.ui.unit.TextUnitType.Sp)
+                    )
+                }
+            }
+
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = 6.dp),
                 color = dividerColor,
@@ -320,7 +379,9 @@ fun HamburgerMenuContent(
                 modifier = Modifier.padding(top = 16.dp, bottom = 8.dp)
             )
 
-            WidgetBackgroundMode.entries.forEach { mode ->
+            WidgetBackgroundMode.entries
+                .filter { it != WidgetBackgroundMode.COLOR }
+                .forEach { mode ->
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier

@@ -4,7 +4,6 @@ import android.app.Application
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.edit
@@ -178,6 +177,13 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         updateWidget()
     }
 
+    fun syncWidgetPresence() {
+        if (!CountdownWidget.hasAnyWidgetInstance(getApplication()) && _activeWidgetId.value != -1) {
+            prefs.edit { putInt("active_id", -1) }
+            _activeWidgetId.value = -1
+        }
+    }
+
     /**
      * If no widget instance is currently pinned to the homescreen, asks the launcher to
      * pin one (Android 8.0+). Should be called right after [setActiveWidget] so the newly
@@ -193,7 +199,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         val component = ComponentName(app, CountdownWidget::class.java)
 
         // If at least one widget already exists, setting active_id is enough.
-        if (manager.getAppWidgetIds(component).isNotEmpty()) return true
+        if (CountdownWidget.hasAnyWidgetInstance(app)) return true
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         if (!manager.isRequestPinAppWidgetSupported) return false
 
@@ -207,13 +213,7 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     private fun updateWidget() {
-        val intent = Intent(getApplication(), CountdownWidget::class.java).apply {
-            action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-            val ids = AppWidgetManager.getInstance(getApplication())
-                .getAppWidgetIds(ComponentName(getApplication(), CountdownWidget::class.java))
-            putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        }
-        getApplication<Application>().sendBroadcast(intent)
+        CountdownWidget.updateAllWidgets(getApplication())
     }
 
     private fun scheduleCountdownNotifications(

@@ -72,6 +72,7 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
             var textScale by remember { mutableFloatStateOf(1f) }
             var highContrast by remember { mutableStateOf(false) }
             var backgroundMode by remember { mutableStateOf(WidgetBackgroundMode.TRANSPARENT) }
+            var layoutMode by remember { mutableStateOf(WidgetLayoutMode.ONE_BY_FIVE) }
 
             androidx.compose.runtime.LaunchedEffect(Unit) {
                 lifecycleScope.launch {
@@ -170,6 +171,27 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
                     }
                 }
 
+                Text(text = stringResource(R.string.widget_layout_mode), color = Color.White)
+                WidgetLayoutMode.entries.forEach { mode ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { layoutMode = mode }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(selected = layoutMode == mode, onClick = { layoutMode = mode })
+                        Text(
+                            text = when (mode) {
+                                WidgetLayoutMode.ONE_BY_FIVE -> stringResource(R.string.widget_layout_wide)
+                                WidgetLayoutMode.TWO_BY_TWO -> stringResource(R.string.widget_layout_compact)
+                            },
+                            color = Color.White,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+
                 Spacer(Modifier.height(8.dp))
 
                 Row(
@@ -190,7 +212,8 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
                                 countdownId = selectedId,
                                 textScale = textScale,
                                 highContrast = highContrast,
-                                mode = backgroundMode
+                                mode = backgroundMode,
+                                layoutMode = layoutMode
                             )
                             val updateIntent = Intent(this@CountdownWidgetConfigureActivity, CountdownWidget::class.java).apply {
                                 action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
@@ -215,7 +238,8 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
         countdownId: Int,
         textScale: Float,
         highContrast: Boolean,
-        mode: WidgetBackgroundMode
+        mode: WidgetBackgroundMode,
+        layoutMode: WidgetLayoutMode
     ) {
         val prefs = context.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
         prefs.edit()
@@ -223,6 +247,7 @@ class CountdownWidgetConfigureActivity : ComponentActivity() {
             .putFloat("widget_text_scale_$appWidgetId", textScale)
             .putBoolean("widget_high_contrast_$appWidgetId", highContrast)
             .putString("widget_background_mode_$appWidgetId", mode.name)
+            .putString("widget_layout_mode_$appWidgetId", layoutMode.name)
             .apply()
     }
 

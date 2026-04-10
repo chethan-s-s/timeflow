@@ -21,6 +21,7 @@
 
         <receiver
             android:name=".widget.CountdownWidget"
+            android:label="Time Flow 5 x 1"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -36,6 +37,19 @@
             android:name=".widget.CountdownWidgetConfigureActivity"
             android:exported="true"
             android:theme="@style/Theme.CountdownTImer" />
+
+        <receiver
+            android:name=".widget.CountdownWidgetCompact"
+            android:label="Time Flow 2 x 2"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/countdown_widget_info_compact" />
+        </receiver>
 
         <activity
             android:name=".MainActivity"

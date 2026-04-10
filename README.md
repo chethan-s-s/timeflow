@@ -1,4 +1,6 @@
-# Time Flow
+cd /Users/chethans/AndroidStudioProjects/CountdownTImer
+git remote add origin https://github.com/<your-username>/timeflow.git
+git push -u origin main# Time Flow
 
 Time Flow is an Android countdown app with widgets, smart reminders, yearly repeats, backup/import, and customizable themes.
 

@@ -61,15 +61,22 @@
     <string name="countdown_finished">Countdown Finished</string>
     <string name="widget_no_countdown_set">No countdown widget set</string>
     <string name="widget_add_manually">Countdown set! Add the widget to your homescreen from the launcher\'s widget picker.</string>
+    <string name="widget_label_wide" translatable="false">Time Flow 5 x 1</string>
+    <string name="widget_label_compact" translatable="false">Time Flow 2 x 2</string>
     <string name="set_as_widget">Set %1$s as widget</string>
     <string name="delete_countdown">Delete %1$s</string>
     <string name="selected_count">%1$d selected</string>
     <string name="widget_title_placeholder">Title</string>
     <string name="widget_time_placeholder">00:00</string>
+    <string name="widget_time_placeholder_wide">20 day 15 hour 10 minutes 5 seconds</string>
+    <string name="widget_time_placeholder_compact">20D 15H\n10M 5S</string>
     <string name="theme">Theme</string>
     <string name="preferences">Preferences</string>
     <string name="larger_text">Larger Text</string>
     <string name="high_contrast">High Contrast</string>
+    <string name="card_layout_mode">Card layout</string>
+    <string name="card_layout_single">1 per row</string>
+    <string name="card_layout_double">2 per row</string>
     <string name="widget_background">Widget background</string>
     <string name="widget_bg_transparent">Transparent</string>
     <string name="widget_bg_color">Use countdown color</string>
@@ -125,6 +132,13 @@
     <string name="widget_pick_countdown">Select countdown</string>
     <string name="widget_text_size">Widget text size</string>
     <string name="widget_text_size_default">Default</string>
+    <string name="widget_layout_mode">Widget size</string>
+    <string name="widget_layout_wide">1 × 5 (wide)</string>
+    <string name="widget_layout_compact">2 × 2 (compact)</string>
+    <string name="countdown_unit_day">Day</string>
+    <string name="countdown_unit_hour">Hour</string>
+    <string name="countdown_unit_min">Min</string>
+    <string name="countdown_unit_sec">Sec</string>
 
     <plurals name="countdown_days_unit">
         <item quantity="one">Day</item>

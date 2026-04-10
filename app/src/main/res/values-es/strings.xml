@@ -28,10 +28,15 @@
     <string name="selected_count">%1$d seleccionados</string>
     <string name="widget_title_placeholder">Título</string>
     <string name="widget_time_placeholder">00:00</string>
+    <string name="widget_time_placeholder_wide">20 day 15 hour 10 minuts 5 secons</string>
+    <string name="widget_time_placeholder_compact">20D 15H\n10M 5S</string>
     <string name="theme">Tema</string>
     <string name="preferences">Preferencias</string>
     <string name="larger_text">Texto grande</string>
     <string name="high_contrast">Alto contraste</string>
+    <string name="card_layout_mode">Diseño de tarjetas</string>
+    <string name="card_layout_single">1 por fila</string>
+    <string name="card_layout_double">2 por fila</string>
     <string name="widget_background">Fondo del widget</string>
     <string name="widget_bg_transparent">Transparente</string>
     <string name="widget_bg_color">Usar color de la cuenta regresiva</string>
@@ -87,6 +92,13 @@
     <string name="widget_pick_countdown">Selecciona una cuenta regresiva</string>
     <string name="widget_text_size">Tamaño de texto del widget</string>
     <string name="widget_text_size_default">Predeterminado</string>
+    <string name="widget_layout_mode">Tamaño del widget</string>
+    <string name="widget_layout_wide">1 × 5 (ancho)</string>
+    <string name="widget_layout_compact">2 × 2 (compacto)</string>
+    <string name="countdown_unit_day">Día</string>
+    <string name="countdown_unit_hour">Hora</string>
+    <string name="countdown_unit_min">Min</string>
+    <string name="countdown_unit_sec">Seg</string>
 
     <plurals name="countdown_days_unit">
         <item quantity="one">Día</item>
