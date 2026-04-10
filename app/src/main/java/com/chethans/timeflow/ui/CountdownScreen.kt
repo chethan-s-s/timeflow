@@ -226,7 +226,6 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 currentTime = System.currentTimeMillis()
-                vm.syncWidgetPresence()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
