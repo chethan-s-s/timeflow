@@ -17,6 +17,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,11 +34,11 @@ import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Category
@@ -119,6 +120,7 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
     val widgetAddManuallyText = stringResource(R.string.widget_add_manually)
     val list by vm.countdowns.observeAsState(emptyList())
     val activeWidgetId by vm.activeWidgetId.collectAsState()
+    val hasAnyWidget by vm.hasWidgetInstance.collectAsState()
     val widgetBackgroundMode by vm.widgetBackgroundMode.collectAsState()
 
     val prefs = remember { context.getSharedPreferences("ui_prefs", android.content.Context.MODE_PRIVATE) }
@@ -226,6 +228,7 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
                 currentTime = System.currentTimeMillis()
+                vm.syncWidgetPresence()
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -460,7 +463,7 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                     }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Default.Sort,
+                                        imageVector = Icons.AutoMirrored.Filled.Sort,
                                         contentDescription = stringResource(R.string.sort_options),
                                         tint = if (isDark) Color(0xFFE0E0E0) else Color(0xFF222222)
                                     )
@@ -586,8 +589,10 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                     },
                                     onSetWidget = {
                                         vm.setActiveWidget(item.id)
-                                        if (!vm.requestPinWidgetIfNeeded()) {
-                                            Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                                        if (!vm.hasAnyWidgetInstance()) {
+                                            if (!vm.requestPinWidgetIfNeeded()) {
+                                                Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                                            }
                                         }
                                     },
                                     onClick = {
@@ -606,6 +611,7 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
                                     isSelected = item.id in selectedIds,
                                     textScale = if (largeText) 1.12f else 1f,
                                     highContrast = highContrast,
+                                    hasAnyWidgetInstance = hasAnyWidget,
                                     isGridMode = cardLayoutMode == CardLayoutMode.TWO_COLUMN
                                 )
                             }
@@ -686,8 +692,10 @@ fun CountdownScreen(vm: CountdownViewModel = viewModel()) {
             },
             onSetWidget = {
                 vm.setActiveWidget(item.id)
-                if (!vm.requestPinWidgetIfNeeded()) {
-                    Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                if (!vm.hasAnyWidgetInstance()) {
+                    if (!vm.requestPinWidgetIfNeeded()) {
+                        Toast.makeText(context, widgetAddManuallyText, Toast.LENGTH_LONG).show()
+                    }
                 }
             },
             onEdit = {

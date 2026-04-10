@@ -1,9 +1,11 @@
 package com.chethans.timeflow.vm
 
 import android.app.Application
+import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import androidx.core.content.edit
@@ -26,7 +28,9 @@ import com.chethans.timeflow.util.exportCountdownsToJson
 import com.chethans.timeflow.util.importCountdownsFromJson
 import com.chethans.timeflow.util.nextYearlyOccurrence
 import com.chethans.timeflow.widget.CountdownWidget
+import com.chethans.timeflow.widget.CountdownWidgetCompact
 import com.chethans.timeflow.widget.WidgetBackgroundMode
+import com.chethans.timeflow.widget.WidgetLayoutMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -42,6 +46,8 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     private val prefs = application.getSharedPreferences("widget_prefs", Context.MODE_PRIVATE)
     private val _activeWidgetId = MutableStateFlow(prefs.getInt("active_id", -1))
     val activeWidgetId = _activeWidgetId.asStateFlow()
+    private val _hasWidgetInstance = MutableStateFlow(CountdownWidget.hasAnyWidgetInstance(application))
+    val hasWidgetInstance = _hasWidgetInstance.asStateFlow()
     private val _widgetBackgroundMode = MutableStateFlow(
         runCatching {
             WidgetBackgroundMode.valueOf(
@@ -178,11 +184,14 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     fun syncWidgetPresence() {
-        if (!CountdownWidget.hasAnyWidgetInstance(getApplication()) && _activeWidgetId.value != -1) {
+        val hasWidget = CountdownWidget.hasAnyWidgetInstance(getApplication())
+        _hasWidgetInstance.value = hasWidget
+        if (!hasWidget && _activeWidgetId.value != -1) {
             prefs.edit { putInt("active_id", -1) }
             _activeWidgetId.value = -1
         }
     }
+    fun hasAnyWidgetInstance(): Boolean = CountdownWidget.hasAnyWidgetInstance(getApplication())
 
     /**
      * If no widget instance is currently pinned to the homescreen, asks the launcher to
@@ -203,7 +212,39 @@ class CountdownViewModel(application: Application) : AndroidViewModel(applicatio
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
         if (!manager.isRequestPinAppWidgetSupported) return false
 
-        return manager.requestPinAppWidget(component, null, null)
+        val callbackIntent = Intent(app, CountdownWidget::class.java).apply {
+            action = CountdownWidget.ACTION_UPDATE_WIDGET
+        }
+        val callback = PendingIntent.getBroadcast(
+            app,
+            component.hashCode(),
+            callbackIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        return manager.requestPinAppWidget(component, null, callback)
+    }
+
+    fun requestPinWidget(layoutMode: WidgetLayoutMode): Boolean {
+        val app = getApplication<Application>()
+        val manager = AppWidgetManager.getInstance(app)
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return false
+        if (!manager.isRequestPinAppWidgetSupported) return false
+
+        val component = when (layoutMode) {
+            WidgetLayoutMode.ONE_BY_FIVE -> ComponentName(app, CountdownWidget::class.java)
+            WidgetLayoutMode.TWO_BY_TWO -> ComponentName(app, CountdownWidgetCompact::class.java)
+        }
+        val callbackIntent = Intent(app, CountdownWidget::class.java).apply {
+            action = CountdownWidget.ACTION_UPDATE_WIDGET
+        }
+        val callback = PendingIntent.getBroadcast(
+            app,
+            component.hashCode(),
+            callbackIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        return manager.requestPinAppWidget(component, null, callback)
     }
 
     fun setWidgetBackgroundMode(mode: WidgetBackgroundMode) {

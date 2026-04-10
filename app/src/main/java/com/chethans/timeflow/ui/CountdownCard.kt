@@ -60,6 +60,7 @@ import kotlinx.coroutines.delay
 fun CountdownCard(
     item: CountdownEntity,
     activeWidgetId: Int,
+    hasAnyWidgetInstance: Boolean,
     currentTime: Long,
     onDelete: () -> Unit,
     onSetWidget: () -> Unit,
@@ -214,11 +215,28 @@ fun CountdownCard(
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
                             )
+
+                            if (isActiveWidget) {
+                                Text(
+                                    text = stringResource(R.string.current_widget),
+                                    color = Color.White,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontSize = if (isGridMode) 9.sp else 10.sp,
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    modifier = Modifier
+                                        .padding(top = 4.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color.White.copy(alpha = 0.2f))
+                                        .padding(horizontal = 8.dp, vertical = 2.dp),
+                                    maxLines = 1
+                                )
+                            }
                         }
                     }
 
                     Row {
-                        if (item.id != activeWidgetId && remaining > 0) {
+                        if (!hasAnyWidgetInstance || (item.id != activeWidgetId && remaining > 0)) {
                             IconButton(onClick = onSetWidget) {
                                 Icon(
                                     imageVector = Icons.Default.Widgets,
